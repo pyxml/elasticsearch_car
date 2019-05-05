@@ -1,0 +1,164 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+{% include "master/css.html" %}
+<body>
+<div class="container-fluid">
+    <div class="row">
+        <nav class="navbar navbar-default">
+            <div class="container">
+                <!-- Brand and toggle get grouped for better mobile display -->
+                <div class="navbar-header">
+                    <button type="button" class="navbar-toggle collapsed" data-toggle="collapse"
+                            data-target="#bs-example-navbar-collapse-1" aria-expanded="false">
+                        <span class="sr-only">Toggle navigation</span>
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                    </button>
+                    <a class="navbar-brand" href="#">Brand</a>
+                </div>
+
+                <!-- Collect the nav links, forms, and other content for toggling -->
+                <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+                    <ul class="nav navbar-nav">
+                        <li class="active"><a href="#">Link <span class="sr-only">(current)</span></a></li>
+                        <li><a href="#">Link</a></li>
+                        <li class="dropdown">
+                            <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button"
+                               aria-haspopup="true" aria-expanded="false">Dropdown <span class="caret"></span></a>
+                            <ul class="dropdown-menu">
+                                <li><a href="#">Action</a></li>
+                                <li><a href="#">Another action</a></li>
+                                <li><a href="#">Something else here</a></li>
+                                <li role="separator" class="divider"></li>
+                                <li><a href="#">Separated link</a></li>
+                                <li role="separator" class="divider"></li>
+                                <li><a href="#">One more separated link</a></li>
+                            </ul>
+                        </li>
+                    </ul>
+                    <form class="navbar-form navbar-left" id="nav-form" method="post">
+                        {% csrf_token %}
+                        <div class="form-group">
+                            <input type="text" class="form-control" placeholder="查查看" name="q">
+                        </div>
+                        <button class="btn btn-default" id="nav-search">搜索</button>
+                    </form>
+                    <ul class="nav navbar-nav navbar-right">
+                        <li><a href="#">Link</a></li>
+                        <li class="dropdown">
+                            <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button"
+                               aria-haspopup="true" aria-expanded="false">Dropdown <span class="caret"></span></a>
+
+                        </li>
+                    </ul>
+                </div><!-- /.navbar-collapse -->
+            </div><!-- /.container-fluid -->
+        </nav>
+    </div>
+    <div class="row">
+        <div class="col-lg-10 col-lg-offset-1">
+            <div class="block-for-right-border">
+                <form action="" class="row" method="post" id="body-form">
+                    {% csrf_token %}
+                    <div class="col-md-8">
+                        <input class="input-lg form-control" type="text" name="q" id="mysearch"
+                               placeholder="输入关键字搜索" autocomplete="off" oninput="Search(actionType,pageNum)">
+                    </div>
+                    <div class="col-md-2">
+                        <button type="button" class="btn btn-primary btn-lg btn-block " id="body-search">搜索</button>
+                    </div>
+                </form>
+                <ul class="search-category nav nav-tabs nav-tabs-primary" id="search_tag">
+                    <li class="active"><a href="javascript:void(0)">全部</a></li>
+                    {% for tag in tags %}
+                        <li><a href="javascript:void(0)">{{ tag.tag }}</a></li>
+                    {% endfor %}
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+    <div class="row">
+        <div class="container">
+            <div class="col-lg-10">
+                <div id="create_num"></div>
+                <div id="content"></div>
+            </div>
+            <div class="box-footer clearfix pull-right">
+
+                <ul class="pagination pagination-sm no-margin" id="page_content">
+
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+</body>
+{% include "master/js.html" %}
+<script>
+
+    var actionType = "全部";
+    var pageNum = "1";
+
+    function Search(actionType, pageNum) {
+        var searchMsg = $("#mysearch").val();
+        $.post({
+            url: "/search/",
+            type: "POST",
+            data: {"action_type": actionType, "search_msg": searchMsg, "page_num": pageNum},
+            success: function (data) {
+                let num = data.msg.hits.total;
+                $("#create_num").html("<span>共找到 <b style='color: red'>" + num + "</b> 条数据</span>");
+                var li = "";
+                $.each(data.msg.hits.hits, function (k, v) {
+                    li += "<div><a  href=/detail/" + v._source.a_uuid + ">" + v.highlight.title + "</a><p>" + v._source.summery + "</p>" + "</div>"
+                });
+                $("#content").html(li);
+                $("#page_content").html(data.page_html)
+
+
+            }
+        });
+    }
+
+    $("#search_tag li").click(function () {
+        $(this).addClass("active").siblings().removeClass("active");
+        actionType = $("#search_tag .active").text();
+        pageNum = $("#page_content .active").text();
+        console.log(pageNum);
+        Search(actionType, pageNum)
+    });
+    $("#page_content li").click(function () {
+         $(this).addClass("active").siblings().removeClass("active");
+        actionType = $("#search_tag .active").text();
+        console.log(actionType);
+        pageNum = $("#page_content .active").text();
+        console.log(pageNum);
+        Search(actionType, pageNum)
+    });
+
+    {#function Last() {#}
+    {#    actionType = $("#search_tag .active").text();#}
+    {#    pageNum = parseInt($("#page_content .active").text()) - 1;#}
+    {#    Search(actionType, pageNum)#}
+    {# }#}
+    {##}
+    {#function Next() {#}
+    {#    actionType = $("#search_tag .active").text();#}
+    {#    pageNum = parseInt($("#page_content .active").text()) + 1;#}
+    {#    Search(actionType, pageNum)#}
+    {# }#}
+
+    // e.preventDefault(); //取消原来自带的属性
+</script>
+</html>
